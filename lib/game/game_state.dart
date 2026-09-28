@@ -44,6 +44,7 @@ class Animal {
   double y;
   bool facingRight = false;
   int moveMs = 0;
+  double moveUntil = 0; // Yürüyüşün bittiği oyun zamanı (sn).
   double wanderTimer;
 
   Animal({
@@ -62,6 +63,7 @@ class Animal {
   bool get productReady => isAdult && production >= 1;
   bool get hungry => fullness < 0.25;
   bool get starving => fullness <= 0;
+  bool isWalking(double now) => now < moveUntil;
   String get emoji => isAdult ? def.emoji : def.babyEmoji;
   String get displayName => isAdult ? def.name : def.babyName;
 
@@ -209,6 +211,7 @@ class GameState extends ChangeNotifier {
     final dist = sqrt(pow(nx - a.x, 2) + pow(ny - a.y, 2));
     if ((nx - a.x).abs() > 0.02) a.facingRight = nx > a.x;
     a.moveMs = (dist * (a.isAdult ? 9000 : 6000)).round().clamp(400, 4000);
+    a.moveUntil = elapsed + a.moveMs / 1000;
     a.x = nx;
     a.y = ny;
     a.wanderTimer = a.moveMs / 1000 + 1.5 + _rng.nextDouble() * 4;

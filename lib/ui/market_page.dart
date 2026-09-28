@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../audio/sfx.dart';
 import '../game/data.dart';
 import '../game/game_state.dart';
 import 'theme.dart';
@@ -176,6 +177,7 @@ class SmoothCircle extends StatelessWidget {
 
 void coinBurst(BuildContext context, Offset pos, int earned) {
   if (earned <= 0) return;
+  Sfx.play(Sound.coin);
   Fx.floatText(context, pos, '+$earned 🪙', color: const Color(0xFFFFE27A));
   Fx.flyTo(
     context,

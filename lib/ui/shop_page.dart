@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../audio/sfx.dart';
 import '../game/data.dart';
 import '../game/game_state.dart';
 import 'theme.dart';
+import 'widgets/animal_figure.dart';
 import 'widgets/common.dart';
 import 'widgets/fx.dart';
 
@@ -129,10 +131,9 @@ class _AnimalCard extends StatelessWidget {
                   colors: [FarmColors.meadow, FarmColors.grass],
                 ),
               ),
-              child: Text(
-                locked ? '🔒' : def.babyEmoji,
-                style: const TextStyle(fontSize: 34),
-              ),
+              child: locked
+                  ? const Text('🔒', style: TextStyle(fontSize: 30))
+                  : AnimalFigure(typeId: def.id, baby: true, size: 54),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -170,6 +171,8 @@ class _AnimalCard extends StatelessWidget {
                   ? null
                   : (pos) {
                       if (game.buyAnimal(def.id)) {
+                        Sfx.play(Sound.buy, volume: 0.7);
+                        Sfx.voice(def.id, adult: false);
                         Fx.floatText(context, pos, '${def.babyEmoji} Meraya!');
                       }
                     },
@@ -188,7 +191,10 @@ class _FeedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final game = GameScope.of(context);
     void buy(Offset pos, int n) {
-      if (game.buyFeed(n)) Fx.floatText(context, pos, '+$n 🌿');
+      if (game.buyFeed(n)) {
+        Sfx.play(Sound.buy);
+        Fx.floatText(context, pos, '+$n 🌿');
+      }
     }
 
     return Container(
@@ -291,6 +297,7 @@ class _UpgradeCard extends StatelessWidget {
                   color: FarmColors.wood,
                   onTap: (pos) {
                     if (onBuy()) {
+                      Sfx.play(Sound.buy);
                       Fx.floatText(
                         context,
                         pos,

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../audio/sfx.dart';
 import '../../game/game_state.dart';
 import '../theme.dart';
 import 'common.dart';
@@ -35,6 +36,8 @@ class SkyHeader extends StatelessWidget {
                 _LevelBadge(game: game),
                 const SizedBox(width: 10),
                 Expanded(child: _DayLabel(game: game)),
+                const _SoundButton(),
+                const SizedBox(width: 8),
                 _CoinPill(money: game.money),
               ],
             ),
@@ -160,6 +163,48 @@ class _DayLabel extends StatelessWidget {
             child: Text('Gün ${game.dayNumber} · $hh:$mm'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SoundButton extends StatelessWidget {
+  const _SoundButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: Sfx.enabled,
+      builder: (context, on, _) => Pressable(
+        onTap: (_) => Sfx.toggle(),
+        child: Tooltip(
+          message: on ? 'Sesi kapat' : 'Sesi aç',
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: FarmColors.paper.withValues(alpha: 0.9),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
+              child: Icon(
+                on ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                key: ValueKey(on),
+                size: 20,
+                color: on ? FarmColors.ink : FarmColors.inkSoft,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

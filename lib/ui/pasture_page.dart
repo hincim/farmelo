@@ -3,9 +3,11 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../audio/sfx.dart';
 import '../game/data.dart';
 import '../game/game_state.dart';
 import 'theme.dart';
+import 'widgets/animal_figure.dart';
 import 'widgets/common.dart';
 import 'widgets/fx.dart';
 
@@ -42,7 +44,10 @@ class PasturePage extends StatelessWidget {
                     ? null
                     : (pos) {
                         final n = game.feedAll();
-                        if (n > 0) Fx.floatText(context, pos, '😋 ×$n');
+                        if (n > 0) {
+                          Sfx.play(Sound.eat);
+                          Fx.floatText(context, pos, '😋 ×$n');
+                        }
                       },
               ),
               const SizedBox(width: 10),
@@ -67,6 +72,7 @@ class PasturePage extends StatelessWidget {
         if (a.productReady) GameData.item(a.def.productId).emoji,
     };
     final n = game.collectAll();
+    Sfx.play(Sound.harvest);
     Fx.floatText(context, pos, '+$n ürün');
     for (final e in products) {
       Fx.flyTo(context, pos, barnTargetKey, e, count: 3, pulse: barnPulse);
@@ -159,6 +165,7 @@ class _Meadow extends StatelessWidget {
                     area: Size(w, h),
                     size: spriteSize,
                     night: night,
+                    walking: a.isWalking(game.elapsed),
                   ),
                 if (game.animals.isEmpty)
                   Center(
@@ -214,6 +221,7 @@ class _AnimalSprite extends StatelessWidget {
   final Size area;
   final double size;
   final bool night;
+  final bool walking;
 
   const _AnimalSprite({
     super.key,
@@ -221,6 +229,7 @@ class _AnimalSprite extends StatelessWidget {
     required this.area,
     required this.size,
     required this.night,
+    required this.walking,
   });
 
   @override
@@ -279,37 +288,29 @@ class _AnimalSprite extends StatelessWidget {
                         ),
                       ),
                     ),
-                    LoopBuilder(
-                      period: Duration(milliseconds: a.starving ? 2400 : 560),
-                      phase: a.id * 0.29,
-                      builder: (context, t, child) {
-                        final hop = a.starving
-                            ? 0.0
-                            : sin(t * pi).abs() * size * 0.05;
-                        final breathe = 1 + 0.03 * sin(t * 2 * pi);
-                        return Transform.translate(
-                          offset: Offset(0, -hop - size * 0.06),
-                          child: Transform.scale(scaleY: breathe, child: child),
-                        );
-                      },
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween(end: a.facingRight ? -1 : 1),
-                        duration: const Duration(milliseconds: 260),
-                        curve: Curves.easeInOut,
-                        builder: (context, flip, child) => Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.diagonal3Values(flip, 1, 1),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(end: a.facingRight ? 1 : -1),
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeInOut,
+                      builder: (context, flip, child) => Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.diagonal3Values(flip, 1, 1),
+                        child: child,
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        transitionBuilder: (child, anim) => ScaleTransition(
+                          scale: anim,
+                          alignment: Alignment.bottomCenter,
                           child: child,
                         ),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 500),
-                          transitionBuilder: (child, anim) =>
-                              ScaleTransition(scale: anim, child: child),
-                          child: Text(
-                            a.emoji,
-                            key: ValueKey(a.emoji),
-                            style: TextStyle(fontSize: size * 0.72),
-                          ),
+                        child: AnimalFigure(
+                          key: ValueKey(a.isAdult),
+                          typeId: a.typeId,
+                          baby: !a.isAdult,
+                          walking: walking,
+                          size: size,
+                          phase: a.id * 0.29,
                         ),
                       ),
                     ),
@@ -366,6 +367,8 @@ class _AnimalSprite extends StatelessWidget {
     if (a.productReady) {
       final item = GameData.item(a.def.productId);
       game.collect(a);
+      Sfx.voice(a.typeId, adult: true);
+      Sfx.play(Sound.harvest, volume: 0.6);
       Fx.floatText(context, pos, '+1 ${item.emoji}');
       Fx.flyTo(
         context,
@@ -378,8 +381,12 @@ class _AnimalSprite extends StatelessWidget {
       Fx.flyTo(context, pos, xpTargetKey, '⭐', count: 1, pulse: xpPulse);
     } else if (a.hungry) {
       final used = game.feed(a);
-      if (used != null) Fx.floatText(context, pos, '$used → 😋');
+      if (used != null) {
+        Sfx.play(Sound.eat);
+        Fx.floatText(context, pos, '$used → 😋');
+      }
     } else {
+      Sfx.voice(a.typeId, adult: a.isAdult);
       showAnimalSheet(context, a.id);
     }
   }
@@ -560,21 +567,15 @@ class _AnimalSheet extends StatelessWidget {
                 ),
               ),
               alignment: Alignment.center,
-              child: LoopBuilder(
-                period: const Duration(milliseconds: 1400),
-                builder: (context, t, child) => Transform.translate(
-                  offset: Offset(0, -sin(t * pi).abs() * 6),
-                  child: child,
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  transitionBuilder: (c, an) =>
-                      ScaleTransition(scale: an, child: c),
-                  child: Text(
-                    a.emoji,
-                    key: ValueKey(a.emoji),
-                    style: const TextStyle(fontSize: 60),
-                  ),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                transitionBuilder: (c, an) =>
+                    ScaleTransition(scale: an, child: c),
+                child: AnimalFigure(
+                  key: ValueKey(a.isAdult),
+                  typeId: a.typeId,
+                  baby: !a.isAdult,
+                  size: 88,
                 ),
               ),
             ),
@@ -620,6 +621,7 @@ class _AnimalSheet extends StatelessWidget {
                     : (pos) {
                         final used = game.feed(a);
                         if (used != null) {
+                          Sfx.play(Sound.eat);
                           Fx.floatText(context, pos, '$used → 😋');
                         }
                       },
@@ -632,6 +634,8 @@ class _AnimalSheet extends StatelessWidget {
                       ? null
                       : (pos) {
                           game.collect(a);
+                          Sfx.voice(a.typeId, adult: true);
+                          Sfx.play(Sound.harvest, volume: 0.6);
                           Fx.floatText(context, pos, '+1 ${product.emoji}');
                           Fx.flyTo(
                             context,
@@ -647,6 +651,8 @@ class _AnimalSheet extends StatelessWidget {
                 _SlaughterButton(
                   label: '${meat.emoji} ×${def.meatAmount} · ~$meatValue 🪙',
                   onConfirm: (pos) {
+                    Sfx.play(Sound.plant);
+                    Sfx.play(Sound.harvest, volume: 0.7);
                     Fx.floatText(
                       context,
                       pos,

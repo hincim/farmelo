@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../audio/sfx.dart';
 import '../game/data.dart';
 import '../game/game_state.dart';
 import 'theme.dart';
@@ -38,6 +39,7 @@ class FieldPage extends StatelessWidget {
                   ? null
                   : (pos) {
                       final n = game.waterAll();
+                      Sfx.play(Sound.water);
                       Fx.floatText(context, pos, '💧 ×$n', color: Colors.white);
                     },
             ),
@@ -51,6 +53,7 @@ class FieldPage extends StatelessWidget {
                   : (pos) {
                       final before = game.money;
                       final n = game.plantAll(seed.id);
+                      if (n > 0) Sfx.play(Sound.plant);
                       if (n > 0) {
                         Fx.floatText(
                           context,
@@ -95,6 +98,7 @@ class FieldPage extends StatelessWidget {
         if (p.isReady) p.crop!.emoji,
     };
     final n = game.harvestAll();
+    Sfx.play(Sound.harvest);
     if (n == 0) return;
     Fx.floatText(context, pos, '+$n ürün', color: Colors.white);
     for (final e in crops) {
@@ -251,6 +255,7 @@ class PlotTile extends StatelessWidget {
     } else if (plot.isReady) {
       final crop = plot.crop!;
       final n = game.harvest(index);
+      Sfx.play(Sound.harvest);
       Fx.floatText(context, pos, '+$n ${crop.emoji}');
       Fx.flyTo(
         context,
@@ -263,6 +268,7 @@ class PlotTile extends StatelessWidget {
       Fx.flyTo(context, pos, xpTargetKey, '⭐', count: 1, pulse: xpPulse);
     } else if (!plot.watered) {
       game.water(index);
+      Sfx.play(Sound.water);
       Fx.floatText(context, pos, '💧 Sulandı', color: const Color(0xFFD6F0FF));
     } else {
       Fx.floatText(
@@ -550,6 +556,7 @@ class _BuyPlotTile extends StatelessWidget {
     return Pressable(
       onTap: (pos) {
         if (game.buyPlot()) {
+          Sfx.play(Sound.buy);
           Fx.floatText(
             context,
             pos,
@@ -646,6 +653,7 @@ class _SeedSheet extends StatelessWidget {
                   ? null
                   : (_) {
                       if (game.plant(plotIndex, crop.id)) {
+                        Sfx.play(Sound.plant);
                         Navigator.pop(context);
                         Fx.floatText(
                           hostContext,

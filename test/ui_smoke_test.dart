@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:farmelo/game/game_state.dart';
 import 'package:farmelo/main.dart';
+import 'package:farmelo/ui/widgets/animal_figure.dart';
 
 Future<void> settle(WidgetTester tester) async {
   for (var i = 0; i < 25; i++) {
@@ -20,7 +21,12 @@ void main() {
       final game = GameState()
         ..money = 2000
         ..level = 5
-        ..inventory.addAll({'bugday': 4, 'sut': 2, 'dana_eti': 3, 'yumurta': 5});
+        ..inventory.addAll({
+          'bugday': 4,
+          'sut': 2,
+          'dana_eti': 3,
+          'yumurta': 5,
+        });
       game.buyAnimal('tavuk');
       game.buyAnimal('inek');
       game.buyAnimal('koyun');
@@ -51,7 +57,7 @@ void main() {
       await tester.tap(find.text('Mera'));
       await settle(tester);
       // Hayvan detayı
-      await tester.longPress(find.text('🐥'));
+      await tester.longPress(find.byType(AnimalFigure).first);
       await settle(tester);
       // Hayvanlar rastgele dolaştığı için üstteki hangisiyse onun paneli açılır.
       expect(find.textContaining(RegExp(r' #\d+$')), findsOneWidget);
@@ -61,4 +67,30 @@ void main() {
       await tester.pump(const Duration(seconds: 4));
     });
   }
+
+  testWidgets('tüm hayvan çizimleri yürürken ve dururken çizilir', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Wrap(
+          children: [
+            for (final type in ['tavuk', 'koyun', 'inek'])
+              for (final baby in [true, false])
+                for (final walking in [true, false])
+                  AnimalFigure(
+                    typeId: type,
+                    baby: baby,
+                    walking: walking,
+                    size: 80,
+                  ),
+          ],
+        ),
+      ),
+    );
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+    expect(find.byType(AnimalFigure), findsNWidgets(12));
+  });
 }

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../audio/sfx.dart';
 import '../game/game_state.dart';
 import 'field_page.dart';
 import 'market_page.dart';
@@ -30,11 +31,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _toastId = 0;
   Timer? _toastTimer;
   LevelUpEvent? _levelUp;
+  Timer? _ambient;
+  final _rng = Random();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Meradayken ara sıra bir hayvan kendiliğinden ses çıkarır (gece uyurlar).
+    _ambient = Timer.periodic(const Duration(seconds: 7), (_) {
+      final night = _game.dayTime < 0.23 || _game.dayTime > 0.8;
+      if (_index != 1 || night || _game.animals.isEmpty) return;
+      if (_rng.nextDouble() > 0.6) return;
+      final a = _game.animals[_rng.nextInt(_game.animals.length)];
+      Sfx.voice(a.typeId, adult: a.isAdult, volume: 0.3);
+    });
   }
 
   @override
@@ -58,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _sub?.cancel();
     _toastTimer?.cancel();
+    _ambient?.cancel();
     _pages.dispose();
     super.dispose();
   }
@@ -65,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void _onEvent(GameEvent e) {
     switch (e) {
       case ToastEvent(:final message):
+        Sfx.play(Sound.error, volume: 0.6);
         _toastTimer?.cancel();
         setState(() {
           _toast = message;
@@ -74,11 +87,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           if (mounted) setState(() => _toast = null);
         });
       case LevelUpEvent():
+        Sfx.play(Sound.levelUp);
         setState(() => _levelUp = e);
     }
   }
 
   void _go(int i) {
+    if (i != _index) Sfx.play(Sound.tap, volume: 0.5);
     _pages.animateToPage(
       i,
       duration: const Duration(milliseconds: 520),

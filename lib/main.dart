@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'audio/sfx.dart';
 import 'game/game_state.dart';
 import 'ui/home_screen.dart';
 import 'ui/theme.dart';
@@ -13,6 +14,7 @@ Future<void> main() async {
   } catch (e) {
     debugPrint('Kayıt deposu açılamadı, ilerleme kaydedilmeyecek: $e');
   }
+  await Sfx.init(prefs);
   final game = GameState.load(prefs)..start();
   runApp(FarmeloApp(game: game));
 }
