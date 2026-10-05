@@ -2,6 +2,16 @@
 
 Farmelo, Flutter ile yazılmış animasyonlu bir çiftlik oyunudur. Tarlaya tohum ekip hasat edersin. Yavru hayvanları besleyip büyütürsün. Yetişen hayvanlardan süt, yumurta ve yün toplarsın ya da onları et olarak satarsın. Ürünlerini köy pazarında, fiyatı iyiyken satarsın.
 
+## Ekran görüntüleri
+
+| Tarla | Mera | Pazar | Mağaza |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/tarla.png" width="200" alt="Tarla: olgun ve büyümekte olan ekinler"> | <img src="docs/screenshots/mera.png" width="200" alt="Mera: dolaşan hayvanlar ve toplanmaya hazır ürünler"> | <img src="docs/screenshots/pazar.png" width="200" alt="Pazar: ambardaki ürünler ve değişen fiyatlar"> | <img src="docs/screenshots/magaza.png" width="200" alt="Mağaza: yavru hayvanlar ve yem"> |
+
+| Tohum seçimi | Gece |
+| :---: | :---: |
+| <img src="docs/screenshots/tohum.png" width="200" alt="Boş tarlaya dokununca açılan tohum seçimi"> | <img src="docs/screenshots/gece.png" width="200" alt="Gece merada uyuyan hayvanlar"> |
+
 ## Oynanış
 
 | Sekme | Ne yapılır |
